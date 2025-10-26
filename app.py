@@ -1,5 +1,5 @@
 """
-CO₂ Reduction AI Agent - Fixed Version with Improved Query Handling
+CO₂ Reduction AI Agent - Cloud Deployment Version
 """
 
 import streamlit as st
@@ -12,15 +12,6 @@ import plotly.express as px
 from datetime import datetime
 import os
 import re
-
-# LangChain imports
-from langchain.llms import Ollama, HuggingFaceHub
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.memory import ConversationBufferMemory
-from langchain.agents import Tool, AgentExecutor, create_react_agent
-from langchain.tools import BaseTool
-from langchain import hub
 
 # ==================== PAGE CONFIG ====================
 st.set_page_config(
@@ -39,21 +30,8 @@ if 'history' not in st.session_state:
     st.session_state.history = []
 if 'user_query' not in st.session_state:
     st.session_state.user_query = ''
-if 'chat_memory' not in st.session_state:
-    st.session_state.chat_memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        return_messages=True
-    )
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
-
-# Default LLM settings
-if 'llm_provider' not in st.session_state:
-    st.session_state.llm_provider = "ollama"
-if 'model_name' not in st.session_state:
-    st.session_state.model_name = "llama3"
-if 'use_llm' not in st.session_state:
-    st.session_state.use_llm = True
 
 # ==================== PROFESSIONAL CSS ====================
 st.markdown("""
@@ -421,32 +399,6 @@ Based on your query about {category.lower() if category != "General" else "susta
     
     return response, current_activity, alternatives
 
-# ==================== LLM CONFIGURATION ====================
-
-def initialize_llm(provider="ollama", model_name="llama3"):
-    """Initialize LLM based on provider choice"""
-    try:
-        if provider == "ollama":
-            llm = Ollama(
-                model=model_name,
-                temperature=0.7,
-                base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-            )
-            return llm
-        elif provider == "huggingface":
-            hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-            if not hf_token:
-                return None
-            llm = HuggingFaceHub(
-                repo_id=model_name,
-                model_kwargs={"temperature": 0.7, "max_length": 512}
-            )
-            return llm
-        else:
-            return None
-    except Exception:
-        return None
-
 # ==================== VECTOR STORE FUNCTIONS ====================
 
 @st.cache_resource
@@ -600,7 +552,6 @@ def main():
         
         if clear_chat:
             st.session_state.conversation_history = []
-            st.session_state.chat_memory.clear()
             st.rerun()
     
     with col_right:
@@ -743,7 +694,6 @@ def main():
             st.session_state.queries_count = 0
             st.session_state.history = []
             st.session_state.conversation_history = []
-            st.session_state.chat_memory.clear()
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
     
